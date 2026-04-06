@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Monitor,
+  RotateCcw,
   Settings,
   Sparkles,
   Sun,
@@ -78,15 +79,15 @@ export default function CuestionarioOptica() {
   const stepGroupLabel = isResultStep
     ? 'Resultado'
     : isClientStep
-      ? 'Preguntas para el cliente'
-      : 'Datos para el óptico';
+      ? 'Preguntas al cliente'
+      : 'Datos técnicos';
 
   const getRecomendacion = () => {
     const potenciaTotal = data.potenciaTotal ?? 0;
     const adicion = data.adicion ?? 0;
 
     let material = 'Índice 1.50 (Estándar)';
-    if (Math.abs(potenciaTotal) > 4.25) material = 'Índice 1.67/1.74 (Ultra fino)';
+    if (Math.abs(potenciaTotal) > 4.25) material = 'Índice 1.67 / 1.74 (Ultra fino)';
     else if (Math.abs(potenciaTotal) >= 2.25) material = 'Índice 1.60 / Airwear (20% más fino)';
 
     let diseno = 'Varilux Comfort Max';
@@ -95,7 +96,7 @@ export default function CuestionarioOptica() {
     if (data.digital === 'intensivo' && adicion > 0) diseno = 'Varilux Digitime (Ocupacional)';
 
     let tratamiento = 'Crizal Sapphire HR';
-    if (data.conduccion === 'noche') tratamiento = 'Crizal Drive (Antirreflejante para conducción)';
+    if (data.conduccion === 'noche') tratamiento = 'Crizal Drive (Antirreflejante nocturno)';
     if (data.exteriores === 'aireLibre') tratamiento = 'Transitions Gen S (Lentes inteligentes)';
 
     return { material, diseno, tratamiento };
@@ -105,209 +106,142 @@ export default function CuestionarioOptica() {
 
   const handleNextStep = async () => {
     if (isResultStep) return;
-
     const isValid = await trigger(currentField, { shouldFocus: true });
     if (!isValid) return;
-
-    setStep((currentStep) => Math.min(currentStep + 1, questionSteps.length));
+    setStep((s) => Math.min(s + 1, questionSteps.length));
   };
 
-  const handlePreviousStep = () => {
-    setStep((currentStep) => Math.max(currentStep - 1, 0));
-  };
+  const handlePreviousStep = () => setStep((s) => Math.max(s - 1, 0));
 
   const handleRestart = () => {
     reset(defaultValues);
     setStep(0);
   };
 
-  const getOptionClasses = (isSelected: boolean) =>
-    `flex items-center gap-3 p-4 rounded-2xl transition ring-1 ${
+  const optionClass = (isSelected: boolean) =>
+    `flex items-center gap-3 w-full px-4 py-4 rounded-2xl text-left transition-all duration-150 ring-1 active:scale-[0.98] ${
       isSelected
-        ? 'bg-blue-600 text-white ring-blue-400 shadow-lg shadow-blue-600/20'
-        : 'bg-zinc-800 hover:bg-zinc-700 ring-zinc-700'
+        ? 'bg-[--color-accent] text-white ring-[--color-accent] shadow-lg'
+        : 'bg-[--color-surface-raised] text-[--color-foreground] ring-[--color-border-strong] hover:ring-[--color-accent]/50'
     }`;
+
+  const inputClass =
+    'w-full bg-[--color-surface-raised] text-[--color-foreground] placeholder:text-[--color-muted] px-4 py-4 rounded-2xl outline-none ring-1 ring-[--color-border-strong] focus:ring-[--color-accent] transition text-base';
 
   const renderStep = () => {
     switch (currentField) {
       case 'edad':
         return (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <p className="text-sm uppercase tracking-[0.3em] text-blue-400">Perfil</p>
-              <h2 className="text-3xl font-semibold">¿Qué rango de edad tienes?</h2>
-              <p className="text-zinc-400">Esto nos ayuda a perfilar el tipo de lente más adecuado para ti.</p>
-            </div>
-
+          <StepWrapper label="Perfil del cliente" title="¿Qué rango de edad tienes?" description="Esto nos ayuda a perfilar el tipo de lente más adecuado.">
             <div className="grid gap-3">
               {[
                 { id: 'menos40', label: 'Menos de 40 años' },
                 { id: '40-50', label: '40 a 50 años' },
                 { id: 'mas50', label: 'Más de 50 años' },
               ].map((item) => (
-                <label key={item.id} className={getOptionClasses(data.edad === item.id)}>
+                <label key={item.id} className={optionClass(data.edad === item.id)}>
                   <input type="radio" value={item.id} className="sr-only" {...register('edad')} />
-                  <span className="text-base">{item.label}</span>
+                  <span className="text-base font-medium">{item.label}</span>
                 </label>
               ))}
             </div>
-
-            {errors.edad && <p className="text-sm text-red-400">{errors.edad.message}</p>}
-          </div>
+            {errors.edad && <ErrorMsg>{errors.edad.message}</ErrorMsg>}
+          </StepWrapper>
         );
 
       case 'digital':
         return (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <p className="text-sm uppercase tracking-[0.3em] text-blue-400">Uso digital</p>
-              <h2 className="text-3xl font-semibold">¿Cuánto usas dispositivos digitales?</h2>
-              <p className="text-zinc-400">Pantallas, móvil, ordenador o tablet a lo largo del día.</p>
-            </div>
-
+          <StepWrapper label="Uso digital" title="¿Cuánto usas dispositivos digitales?" description="Pantallas, móvil, ordenador o tablet a lo largo del día.">
             <div className="grid gap-3">
               {[
-                { id: 'ocasional', label: 'Ocasional' },
-                { id: 'moderado', label: 'Moderado (3-6h)' },
-                { id: 'intensivo', label: 'Intensivo (+6h)' },
+                { id: 'ocasional', label: 'Ocasional (menos de 3h)' },
+                { id: 'moderado', label: 'Moderado (3–6h)' },
+                { id: 'intensivo', label: 'Intensivo (más de 6h)' },
               ].map((item) => (
-                <label key={item.id} className={getOptionClasses(data.digital === item.id)}>
+                <label key={item.id} className={optionClass(data.digital === item.id)}>
                   <input type="radio" value={item.id} className="sr-only" {...register('digital')} />
-                  <span className="text-base">{item.label}</span>
+                  <span className="text-base font-medium">{item.label}</span>
                 </label>
               ))}
             </div>
-
-            {errors.digital && <p className="text-sm text-red-400">{errors.digital.message}</p>}
-          </div>
+            {errors.digital && <ErrorMsg>{errors.digital.message}</ErrorMsg>}
+          </StepWrapper>
         );
 
       case 'conduccion':
         return (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <p className="text-sm uppercase tracking-[0.3em] text-blue-400">Conducción</p>
-              <h2 className="text-3xl font-semibold">¿Cómo es tu conducción habitual?</h2>
-              <p className="text-zinc-400">Sobre todo nos interesa saber si conduces de noche o en condiciones exigentes.</p>
-            </div>
-
+          <StepWrapper label="Conducción" title="¿Cómo es tu conducción habitual?" description="Nos interesa saber si conduces de noche o en condiciones exigentes.">
             <div className="grid gap-3">
               {[
-                { id: 'ocasional', label: 'No conduzco apenas', icon: <Settings size={18} /> },
-                { id: 'dia', label: 'Sobre todo de día', icon: <Car size={18} /> },
-                { id: 'noche', label: 'Conducción nocturna', icon: <Car size={18} /> },
+                { id: 'ocasional', label: 'No conduzco apenas', icon: <Settings size={17} /> },
+                { id: 'dia', label: 'Sobre todo de día', icon: <Car size={17} /> },
+                { id: 'noche', label: 'Conducción nocturna frecuente', icon: <Car size={17} /> },
               ].map((item) => (
-                <label key={item.id} className={getOptionClasses(data.conduccion === item.id)}>
+                <label key={item.id} className={optionClass(data.conduccion === item.id)}>
                   <input type="radio" value={item.id} className="sr-only" {...register('conduccion')} />
-                  {item.icon}
-                  <span className="text-base">{item.label}</span>
+                  <span className="shrink-0 opacity-70">{item.icon}</span>
+                  <span className="text-base font-medium">{item.label}</span>
                 </label>
               ))}
             </div>
-
-            {errors.conduccion && <p className="text-sm text-red-400">{errors.conduccion.message}</p>}
-          </div>
+            {errors.conduccion && <ErrorMsg>{errors.conduccion.message}</ErrorMsg>}
+          </StepWrapper>
         );
 
       case 'exteriores':
         return (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <p className="text-sm uppercase tracking-[0.3em] text-blue-400">Exterior</p>
-              <h2 className="text-3xl font-semibold">¿Cómo es tu vida en exteriores?</h2>
-              <p className="text-zinc-400">Buscamos entender tu exposición al sol y los cambios de luz del día.</p>
-            </div>
-
+          <StepWrapper label="Vida exterior" title="¿Cómo es tu vida en exteriores?" description="Buscamos entender tu exposición al sol y los cambios de luz.">
             <div className="grid gap-3">
               {[
-                { id: 'interior', label: 'Espacios interiores', icon: <Monitor size={18} /> },
-                { id: 'mixto', label: 'Entra y sale con frecuencia', icon: <Settings size={18} /> },
-                {
-                  id: 'aireLibre',
-                  label: 'Actividades al aire libre / Fotosensibilidad',
-                  icon: <Sun size={18} />,
-                },
+                { id: 'interior', label: 'Mayormente en interiores', icon: <Monitor size={17} /> },
+                { id: 'mixto', label: 'Entra y sale con frecuencia', icon: <Settings size={17} /> },
+                { id: 'aireLibre', label: 'Mucho tiempo al aire libre', icon: <Sun size={17} /> },
               ].map((item) => (
-                <label key={item.id} className={getOptionClasses(data.exteriores === item.id)}>
+                <label key={item.id} className={optionClass(data.exteriores === item.id)}>
                   <input type="radio" value={item.id} className="sr-only" {...register('exteriores')} />
-                  {item.icon}
-                  <span className="text-base">{item.label}</span>
+                  <span className="shrink-0 opacity-70">{item.icon}</span>
+                  <span className="text-base font-medium">{item.label}</span>
                 </label>
               ))}
             </div>
-
-            {errors.exteriores && <p className="text-sm text-red-400">{errors.exteriores.message}</p>}
-          </div>
+            {errors.exteriores && <ErrorMsg>{errors.exteriores.message}</ErrorMsg>}
+          </StepWrapper>
         );
 
       case 'od':
         return (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <p className="text-sm uppercase tracking-[0.3em] text-blue-400">Datos técnicos del óptico</p>
-              <h2 className="text-3xl font-semibold">¿Cuál es la graduación OD?</h2>
-              <p className="text-zinc-400">Introduce la graduación en el formato habitual de la óptica.</p>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs text-zinc-500 uppercase">Graduación OD</label>
-              <input
-                type="text"
-                placeholder="Ej: -2.50"
-                className="w-full bg-zinc-800 p-4 rounded-2xl outline-none ring-1 ring-zinc-700 focus:ring-blue-500"
-                {...register('od')}
-              />
-              {errors.od && <p className="text-sm text-red-400">{errors.od.message}</p>}
-            </div>
-          </div>
+          <StepWrapper label="Datos del óptico" title="Graduación OD" description="Introduce la graduación en el formato habitual (ej: -2.50).">
+            <input type="text" placeholder="Ej: -2.50" className={inputClass} {...register('od')} />
+            {errors.od && <ErrorMsg>{errors.od.message}</ErrorMsg>}
+          </StepWrapper>
         );
 
       case 'adicion':
         return (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <p className="text-sm uppercase tracking-[0.3em] text-blue-400">Datos técnicos del óptico</p>
-              <h2 className="text-3xl font-semibold">¿Cuál es la adición?</h2>
-              <p className="text-zinc-400">Usa pasos de 0.25 si lo necesitas.</p>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs text-zinc-500 uppercase">Adición (+)</label>
-              <input
-                type="number"
-                step="0.25"
-                placeholder="0.00"
-                className="w-full bg-zinc-800 p-4 rounded-2xl outline-none ring-1 ring-zinc-700 focus:ring-blue-500"
-                {...register('adicion', { setValueAs: parseOptionalNumber })}
-              />
-              {errors.adicion && <p className="text-sm text-red-400">{errors.adicion.message}</p>}
-            </div>
-          </div>
+          <StepWrapper label="Datos del óptico" title="Adición" description="Usa pasos de 0.25 si lo necesitas.">
+            <input
+              type="number"
+              step="0.25"
+              placeholder="0.00"
+              className={inputClass}
+              {...register('adicion', { setValueAs: parseOptionalNumber })}
+            />
+            {errors.adicion && <ErrorMsg>{errors.adicion.message}</ErrorMsg>}
+          </StepWrapper>
         );
 
       case 'potenciaTotal':
         return (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <p className="text-sm uppercase tracking-[0.3em] text-blue-400">Datos técnicos del óptico</p>
-              <h2 className="text-3xl font-semibold">¿Cuál es la potencia total?</h2>
-              <p className="text-zinc-400">Este dato es clave para calcular el material del lente.</p>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs text-zinc-500 uppercase">Potencia total (Esf + Cyl)</label>
-              <input
-                type="number"
-                step="0.25"
-                placeholder="Ej: -3.25"
-                className="w-full bg-zinc-800 p-4 rounded-2xl outline-none ring-1 ring-zinc-700 focus:ring-blue-500"
-                {...register('potenciaTotal', { setValueAs: parseOptionalNumber })}
-              />
-              {errors.potenciaTotal && (
-                <p className="text-sm text-red-400">{errors.potenciaTotal.message}</p>
-              )}
-            </div>
-          </div>
+          <StepWrapper label="Datos del óptico" title="Potencia total" description="Suma de esfera y cilindro. Dato clave para el material del lente.">
+            <input
+              type="number"
+              step="0.25"
+              placeholder="Ej: -3.25"
+              className={inputClass}
+              {...register('potenciaTotal', { setValueAs: parseOptionalNumber })}
+            />
+            {errors.potenciaTotal && <ErrorMsg>{errors.potenciaTotal.message}</ErrorMsg>}
+          </StepWrapper>
         );
 
       default:
@@ -316,127 +250,188 @@ export default function CuestionarioOptica() {
   };
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden">
-        <div className="p-6 border-b border-zinc-800 bg-zinc-900/50 space-y-4">
-          <div className="flex justify-between items-center gap-4">
-            <div className="flex items-center gap-4 min-w-0">
-              <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-white/95 p-1 shadow-lg shadow-black/20">
-                <Image
-                  src="/optica%20calpe.png"
-                  alt="Logotipo de Optica Costa Blanca"
-                  fill
-                  className="object-contain p-1"
-                  sizes="56px"
-                />
-              </div>
-              <div className="min-w-0">
-                <h1 className="text-xl font-bold text-white">Optica Costa Blanca</h1>
-                <p className="text-xs text-zinc-500 uppercase tracking-widest mt-1">{stepGroupLabel}</p>
-              </div>
-            </div>
-            <div className="text-sm font-mono text-blue-400">
-              Paso {Math.min(step + 1, totalSteps)} / {totalSteps}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-blue-500 transition-all duration-300"
-                style={{ width: `${progress}%` }}
+    <div className="min-h-dvh bg-[--color-background] text-[--color-foreground] flex flex-col">
+      {/* Header con foto de la optica */}
+      <header className="sticky top-0 z-50 bg-[--color-surface]/90 backdrop-blur-md border-b border-[--color-border]">
+        <div className="flex items-center justify-between px-4 h-16 max-w-lg mx-auto w-full">
+          <div className="flex items-center gap-3">
+            <div className="relative rounded-xl overflow-hidden bg-white shadow-md shrink-0" style={{ width: 40, height: 40 }}>
+              <Image
+                src="/optica%20calpe.png"
+                alt="Optica Costa Blanca"
+                fill
+                className="object-contain p-1"
+                sizes="40px"
+                priority
+                loading="eager"
               />
             </div>
-            <p className="text-xs text-zinc-500">
-              {isResultStep
-                ? 'Resultado final listo'
-                : isClientStep
-                  ? 'Estas preguntas se le hacen directamente al cliente'
-                  : 'En esta parte el óptico completa los datos técnicos'}
-            </p>
+            <div>
+              <p className="text-sm font-bold text-[--color-foreground] leading-tight">Optica Costa Blanca</p>
+              <p className="text-[11px] text-[--color-muted] leading-tight">Asesor de lentes</p>
+            </div>
+          </div>
+          <div className="text-xs font-mono text-[--color-accent] tabular-nums">
+            {Math.min(step + 1, totalSteps)}<span className="text-[--color-muted]">/{totalSteps}</span>
           </div>
         </div>
+      </header>
 
-        <div className="p-8">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={step}
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -24 }}
-              transition={{ duration: 0.22 }}
-              className="min-h-[360px] flex flex-col justify-center"
-            >
-              {isResultStep ? (
-                <div className="space-y-6 text-center">
-                  <motion.div
-                    initial={{ scale: 0.9 }}
-                    animate={{ scale: 1 }}
-                    className="inline-block p-4 bg-blue-600/20 rounded-full mb-2"
-                  >
-                    <Sparkles className="text-blue-400" size={40} />
-                  </motion.div>
-                  <h2 className="text-2xl font-bold">Solución Óptima Sugerida</h2>
+      {/* Barra de progreso */}
+      <div className="h-1 bg-[--color-surface-raised]">
+        <div
+          className="h-full bg-[--color-accent] transition-all duration-500 ease-out"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
 
-                  <div className="bg-zinc-800/50 p-6 rounded-2xl border border-blue-500/30 space-y-4 text-left">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle2 className="text-green-500 shrink-0 mt-1" />
-                      <p className="text-lg">
-                        Tu lente ideal es{' '}
-                        <span className="text-blue-400 font-bold">{recomendacion.diseno}</span>
-                      </p>
-                    </div>
-                    <div className="pl-9 space-y-2 text-zinc-400">
-                      <p>
-                        • <strong>Material:</strong> {recomendacion.material}
-                      </p>
-                      <p>
-                        • <strong>Tratamiento:</strong> {recomendacion.tratamiento}
-                      </p>
-                    </div>
-                  </div>
+      {/* Etiqueta de fase */}
+      <div className="px-4 pt-4 pb-1 max-w-lg mx-auto w-full">
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-widest uppercase text-[--color-muted] border border-[--color-border-strong] rounded-full px-3 py-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-[--color-accent] shrink-0" />
+          {stepGroupLabel}
+        </span>
+      </div>
 
-                  <p className="text-zinc-500 text-sm italic mt-4">
-                    Esta combinación garantiza el mejor confort visual basado en el estilo de vida
-                    del cliente.
-                  </p>
-                </div>
-              ) : (
-                renderStep()
-              )}
-            </motion.div>
-          </AnimatePresence>
-
-          <div className="mt-10 flex justify-between gap-3">
-            {step > 0 ? (
-              <button
-                onClick={handlePreviousStep}
-                className="flex items-center gap-2 px-6 py-3 text-zinc-400 hover:text-white transition"
-              >
-                <ChevronLeft size={20} /> Atrás
-              </button>
-            ) : (
-              <div />
-            )}
-
+      {/* Contenido del step */}
+      <main className="flex-1 px-4 py-4 max-w-lg mx-auto w-full">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+          >
             {isResultStep ? (
-              <button
-                onClick={handleRestart}
-                className="ml-auto px-8 py-3 bg-zinc-100 text-zinc-900 rounded-xl font-bold hover:bg-white transition"
-              >
-                Nuevo cuestionario
-              </button>
+              <ResultView recomendacion={recomendacion} />
             ) : (
-              <button
-                onClick={handleNextStep}
-                className="ml-auto flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-500 transition shadow-lg shadow-blue-600/20"
-              >
-                Continuar <ChevronRight size={20} />
-              </button>
+              renderStep()
             )}
-          </div>
+          </motion.div>
+        </AnimatePresence>
+      </main>
+
+      {/* Navegacion fija en el fondo */}
+      <div className="sticky bottom-0 bg-[--color-surface]/95 backdrop-blur-md border-t border-[--color-border] px-4 py-3 max-w-lg mx-auto w-full">
+        <div className="flex items-center justify-between gap-3">
+          {step > 0 ? (
+            <button
+              onClick={handlePreviousStep}
+              className="flex items-center gap-2 px-4 py-3 text-[--color-muted] hover:text-[--color-foreground] transition text-sm font-medium"
+            >
+              <ChevronLeft size={18} />
+              Atrás
+            </button>
+          ) : (
+            <div />
+          )}
+
+          {isResultStep ? (
+            <button
+              onClick={handleRestart}
+              className="ml-auto flex items-center gap-2 px-6 py-3 bg-[--color-surface-raised] text-[--color-foreground] rounded-2xl font-semibold text-sm hover:bg-[--color-border-strong] transition active:scale-[0.97] ring-1 ring-[--color-border-strong]"
+            >
+              <RotateCcw size={16} />
+              Nuevo cuestionario
+            </button>
+          ) : (
+            <button
+              onClick={handleNextStep}
+              className="ml-auto flex items-center gap-2 px-6 py-3 bg-[--color-accent] text-white rounded-2xl font-semibold text-sm hover:bg-[--color-accent-hover] transition active:scale-[0.97] shadow-lg shadow-blue-900/30"
+            >
+              Continuar
+              <ChevronRight size={18} />
+            </button>
+          )}
         </div>
       </div>
-    </main>
+    </div>
+  );
+}
+
+// Sub-componentes
+
+function StepWrapper({
+  label,
+  title,
+  description,
+  children,
+}: {
+  label: string;
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-5 pt-2 pb-6">
+      <div className="space-y-1">
+        <p className="text-xs font-semibold uppercase tracking-widest text-[--color-accent]">{label}</p>
+        <h2 className="text-2xl font-bold text-balance leading-snug">{title}</h2>
+        <p className="text-sm text-[--color-muted] leading-relaxed">{description}</p>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function ErrorMsg({ children }: { children: React.ReactNode }) {
+  return <p className="text-sm text-red-400 mt-1">{children}</p>;
+}
+
+function ResultView({
+  recomendacion,
+}: {
+  recomendacion: { material: string; diseno: string; tratamiento: string };
+}) {
+  return (
+    <div className="pt-2 pb-6 space-y-6">
+      <div className="space-y-1">
+        <p className="text-xs font-semibold uppercase tracking-widest text-[--color-accent]">Recomendacion</p>
+        <h2 className="text-2xl font-bold">Solución óptima sugerida</h2>
+        <p className="text-sm text-[--color-muted] leading-relaxed">
+          Combinacion personalizada basada en el perfil visual del cliente.
+        </p>
+      </div>
+
+      {/* Tarjeta principal de diseño */}
+      <div className="rounded-3xl bg-[--color-accent-subtle] border border-[--color-accent]/30 p-5 space-y-1">
+        <p className="text-xs font-semibold uppercase tracking-widest text-[--color-accent] mb-3">Diseño de lente</p>
+        <div className="flex items-center gap-3">
+          <Sparkles className="text-[--color-accent] shrink-0" size={22} />
+          <p className="text-xl font-bold text-[--color-foreground]">{recomendacion.diseno}</p>
+        </div>
+      </div>
+
+      {/* Detalles adicionales */}
+      <div className="space-y-3">
+        <ResultItem icon={<CheckCircle2 size={18} className="text-[--color-success]" />} label="Material" value={recomendacion.material} />
+        <ResultItem icon={<CheckCircle2 size={18} className="text-[--color-success]" />} label="Tratamiento" value={recomendacion.tratamiento} />
+      </div>
+
+      <p className="text-xs text-[--color-muted] text-center leading-relaxed px-2">
+        Esta combinacion garantiza el mejor confort visual basado en el estilo de vida del cliente.
+      </p>
+    </div>
+  );
+}
+
+function ResultItem({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-start gap-3 bg-[--color-surface-raised] rounded-2xl px-4 py-4 ring-1 ring-[--color-border-strong]">
+      <span className="shrink-0 mt-0.5">{icon}</span>
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-[--color-muted]">{label}</p>
+        <p className="text-sm font-medium text-[--color-foreground] mt-0.5">{value}</p>
+      </div>
+    </div>
   );
 }

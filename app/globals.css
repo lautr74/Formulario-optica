@@ -1,12 +1,20 @@
 @import "tailwindcss";
 
-:root {
-  --background: #09090b;
-  --foreground: #f4f4f5;
-  --muted: #a1a1aa;
-  --border: rgba(255, 255, 255, 0.08);
-  --card: rgba(24, 24, 27, 0.88);
-  --accent: #3b82f6;
+@theme inline {
+  --font-sans: 'Inter', 'Inter Fallback', sans-serif;
+
+  /* Color tokens */
+  --color-background: #0a0f1e;
+  --color-surface: #111827;
+  --color-surface-raised: #1a2236;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.14);
+  --color-foreground: #f0f4ff;
+  --color-muted: #6b7a99;
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+  --color-accent-subtle: rgba(37, 99, 235, 0.15);
+  --color-success: #10b981;
 }
 
 *,
@@ -17,17 +25,17 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   margin: 0;
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at top, rgba(59, 130, 246, 0.12), transparent 32%),
-    linear-gradient(180deg, #09090b 0%, #111827 100%);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), sans-serif;
+  min-height: 100dvh;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
   text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
@@ -43,6 +51,6 @@ textarea {
 }
 
 ::selection {
-  background: rgba(59, 130, 246, 0.28);
+  background: rgba(37, 99, 235, 0.3);
   color: #ffffff;
 }
