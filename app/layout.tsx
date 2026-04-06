@@ -1,21 +1,27 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-// Configuración de fuentes modernas
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+import Image from 'next/image';
+import type { Metadata } from 'next';
+import { Fraunces, Manrope } from 'next/font/google';
+import './globals.css';
+
+const manrope = Manrope({
+  variable: '--font-sans',
+  subsets: ['latin'],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const fraunces = Fraunces({
+  variable: '--font-display',
+  subsets: ['latin'],
 });
 
-// Metadatos basados en el borrador técnico
 export const metadata: Metadata = {
-  title: "Lifestyle Vision | Herramienta de Venta Profesional", //
-  description: "Cuestionario técnico para la recomendación de lentes Essilor", // [cite: 3, 36]
+  title: 'Optica Costa Blanca | Asesor Visual',
+  description:
+    'Cuestionario profesional para recomendar lentes según el estilo de vida del cliente y los datos técnicos de la óptica.',
+  icons: {
+    icon: '/optica%20calpe.png',
+    shortcut: '/optica%20calpe.png',
+    apple: '/optica%20calpe.png',
+  },
 };
 
 export default function RootLayout({
@@ -24,34 +30,45 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="dark">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-zinc-950 text-zinc-100 selection:bg-blue-500/30`}
-      >
-        {/* Un sutil gradiente de fondo para dar profundidad */}
-        <div className="fixed inset-0 -z-10 h-full w-full bg-zinc-950 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:24px_24px] opacity-20" />
+    <html lang="es">
+      <body className={`${manrope.variable} ${fraunces.variable} antialiased`}>
+        <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_rgba(28,92,95,0.18),_transparent_32%),radial-gradient(circle_at_bottom_right,_rgba(226,188,121,0.2),_transparent_28%)]" />
 
         <div className="relative flex min-h-screen flex-col">
-          {/* Header minimalista opcional */}
-          <header className="border-b border-zinc-800/50 bg-zinc-950/50 backdrop-blur-md sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
-              <span className="text-sm font-bold tracking-tighter text-blue-500 uppercase">
-                Lifestyle Vision
-              </span>
-              <span className="text-[10px] text-zinc-500 font-mono border border-zinc-800 px-2 py-1 rounded">
-                v1.0.0-PRO
-              </span>
+          <header className="px-4 pt-4 md:px-6">
+            <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 rounded-full border border-[#ddd0bd] bg-[rgba(251,248,242,0.78)] px-4 py-3 shadow-[0_18px_50px_rgba(69,62,50,0.08)] backdrop-blur md:px-5">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-[#e7dccd] bg-white">
+                  <Image
+                    src="/optica%20calpe.png"
+                    alt="Logotipo de Optica Costa Blanca"
+                    fill
+                    className="object-contain p-1.5"
+                    sizes="40px"
+                    priority
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold uppercase tracking-[0.24em] text-[#8d6b33]">
+                    Optica Costa Blanca
+                  </p>
+                  <p className="truncate text-xs text-[#64767a]">Herramienta de recomendación visual</p>
+                </div>
+              </div>
+
+              <div className="hidden rounded-full border border-[#e2d7c7] bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#264247] sm:block">
+                Asesor en tienda
+              </div>
             </div>
           </header>
 
-          {/* Contenido principal */}
-          <main className="flex-1 flex flex-col items-center justify-center">
-            {children}S
-          </main>
+          <main className="flex-1">{children}</main>
 
-          {/* Footer técnico */}
-          <footer className="p-6 text-center text-[10px] text-zinc-600 uppercase tracking-widest">
-            Borrador Final - Herramienta Técnica de Óptica [cite: 4, 27]
+          <footer className="px-4 pb-6 pt-2 md:px-6">
+            <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-2 text-center text-xs text-[#6c7670] sm:flex-row sm:text-left">
+              <p>Optica Costa Blanca · Cuestionario profesional de recomendación visual</p>
+              <p>Diseñado para acompañar la conversación comercial y la carga técnica</p>
+            </div>
           </footer>
         </div>
       </body>
